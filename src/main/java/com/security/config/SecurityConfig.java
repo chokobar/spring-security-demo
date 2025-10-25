@@ -32,12 +32,16 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home").permitAll()     // 모두 접근 허용
-                        .requestMatchers("/admin").hasRole("ADMIN")     // ADMIN 권한만
+                        .requestMatchers("/", "/home", "/auth/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()                     // 나머지는 로그인 필요
                 )
                 .formLogin(form -> form
-                        .successHandler(roleBasedSuccessHandler()) // 역할별 리다이렉트
+                        .loginPage("/auth/login")      // GET 로그인 페이지
+                        .loginProcessingUrl("/login")  // POST 인증 처리 URL
+                        .successHandler(roleBasedSuccessHandler())
+                        .failureUrl("/auth/login?error")
+                        .permitAll()
                 )
                 .logout(Customizer.withDefaults());
         return http.build();
