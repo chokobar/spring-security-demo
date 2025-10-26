@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <!-- Bootstrap CSS 연결 -->
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+
+    <style>
+        .btn-main-top {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            margin-left: auto;
+            background: #007bff; /* 파란색 */
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-main-top:hover {
+            background: #0069d9; /* hover 시 더 진한 파란색 */
+        }
+
+        .login-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card p-4 shadow" style="width: 400px;">
+        <div class="login-header mb-4">
+            <h3 class="mb-0">로그인</h3>
+        </div>
+        <form th:action="@{/login}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="mb-3">
+                <label for="username" class="form-label">아이디</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="아이디" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">비밀번호</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="비밀번호" required>
+            </div>
+
+            <div class="d-grid mb-2">
+                <button type="submit" class="btn btn-success">로그인</button>
+            </div>
+
+            <div th:if="${param.error}">
+                <p class="text-danger">로그인 실패. 아이디/비밀번호를 확인하세요.</p>
+            </div>
+            <div th:if="${param.logout}">
+                <p class="text-success">로그아웃 되었습니다.</p>
+            </div>
+        </form>
+
+
+    </div>
+</div>
+
+</body>
+</html>
