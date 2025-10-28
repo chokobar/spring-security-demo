@@ -37,13 +37,20 @@ public class SecurityConfig {
                         .anyRequest().authenticated()                     // 나머지는 로그인 필요
                 )
                 .formLogin(form -> form
-                        .loginPage("/auth/login")      // GET 로그인 페이지
-                        .loginProcessingUrl("/login")  // POST 인증 처리 URL
+                        .loginPage("/auth/login")
+                        .loginProcessingUrl("/login")
                         .successHandler(roleBasedSuccessHandler())
                         .failureUrl("/auth/login?error")
                         .permitAll()
                 )
-                .logout(Customizer.withDefaults());
+                .logout(logout -> logout
+                        .logoutUrl("/logout")                       // CSRF 필요
+                        .logoutSuccessUrl("/auth/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
+                )
+                .csrf(Customizer.withDefaults());
         return http.build();
     }
 
