@@ -9,6 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -17,24 +19,45 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // BCrypt 인코더
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // strength 기본=10
+    }
+
     @Bean
     AuthenticationSuccessHandler roleBasedSuccessHandler() {
         return (request, response, authentication) -> {
             boolean isAdmin = authentication.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
-
             response.sendRedirect(isAdmin ? "/admin" : "/home");
         };
     }
 
+    // 인메모리 사용자 (BCrypt 적용)
+    @Bean
+    InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
+        UserDetails admin = User.withUsername("admin")
+                .password(encoder.encode("admin123"))
+                .roles("ADMIN")
+                .build();
+        UserDetails user = User.withUsername("user01")
+                .password(encoder.encode("user01"))
+                .roles("USER")
+                .build();
+
+        return new InMemoryUserDetailsManager(admin, user);
+    }
+
+    // 보안 설정
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/auth/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/", "/home", "/auth/login", "/join", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
-                        .anyRequest().authenticated()                     // 나머지는 로그인 필요
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/auth/login")
@@ -43,30 +66,20 @@ public class SecurityConfig {
                         .failureUrl("/auth/login?error")
                         .permitAll()
                 )
+                .rememberMe(rm -> rm
+                        .key("demo-remember-me-key")        // 아무 문자열(서버 재시작 유지하려면 외부설정)
+                        .rememberMeParameter("remember-me") // 폼의 체크박스 name과 일치
+                        .tokenValiditySeconds(1209600)      // 14일
+                )
                 .logout(logout -> logout
-                        .logoutUrl("/logout")                       // CSRF 필요
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/auth/login?logout")
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
+                        .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll()
                 )
                 .csrf(Customizer.withDefaults());
+
         return http.build();
-    }
-
-    @Bean
-    UserDetailsService userDetailsService() {
-        // 학습용 계정 2개
-        UserDetails admin = User.withUsername("admin")
-                .password("{noop}admin123") // 비밀번호 인코딩 없이 {noop}
-                .roles("ADMIN")
-                .build();
-
-        UserDetails user = User.withUsername("user01")
-                .password("{noop}user01")
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, user);
     }
 }
