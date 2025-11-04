@@ -35,7 +35,7 @@ public class SecurityConfig {
         };
     }
 
-    // 인메모리 사용자 (BCrypt 적용)
+    // 관리자 및 사용자 (BCrypt 적용)
     @Bean
     InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
         UserDetails admin = User.withUsername("admin")
@@ -67,8 +67,8 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .rememberMe(rm -> rm
-                        .key("demo-remember-me-key")        // 아무 문자열(서버 재시작 유지하려면 외부설정)
-                        .rememberMeParameter("remember-me") // 폼의 체크박스 name과 일치
+                        .key("demo-remember-me-key")
+                        .rememberMeParameter("remember-me")
                         .tokenValiditySeconds(1209600)      // 14일
                 )
                 .logout(logout -> logout
