@@ -2,7 +2,8 @@
 
 ## 📖 개요
 Spring Boot 3 기반의 Spring Security 기본기 학습용 프로젝트입니다.
-커스텀 로그인 페이지, In-Memory 사용자, 회원가입(동적 유저 추가), Remember-Me, 역할 기반 리디렉션을 구현했습니다.
+커스텀 로그인 페이지, In-Memory 사용자, 
+회원가입(동적 유저 추가), Remember-Me, 역할 기반 리디렉션을 구현했습니다.
 
 ---
 
