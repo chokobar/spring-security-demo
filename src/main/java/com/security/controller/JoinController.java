@@ -30,9 +30,7 @@ public class JoinController {
     }
 
     @PostMapping("/join")
-    public String join(@Valid @ModelAttribute JoinForm joinForm,
-                       BindingResult bindingResult,
-                       RedirectAttributes ra) {
+    public String join(@Valid @ModelAttribute JoinForm joinForm, BindingResult bindingResult, RedirectAttributes ra) {
 
         if (bindingResult.hasErrors()) {
             return "join";
@@ -53,6 +51,7 @@ public class JoinController {
                 .build();
 
         userDetailsManager.createUser(newUser);
+
         ra.addFlashAttribute("joined", true);
         return "redirect:/auth/login";
     }
