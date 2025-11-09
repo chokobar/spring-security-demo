@@ -28,7 +28,6 @@ ROLE_ADMIN → /admin, 그 외 → /home
 - 접근 제어(인가)
 /admin은 ADMIN만, /, /home, /auth/login, /join, 정적 리소스는 모두 허용
 - Remember-Me (14일) / 로그아웃 (세션 무효화 + 쿠키 삭제)
-- CSRF 활성화 (폼에 CSRF 토큰 포함)
 
 
 ## 🧪 학습 포인트
@@ -37,4 +36,3 @@ ROLE_ADMIN → /admin, 그 외 → /home
 - AuthenticationSuccessHandler로 권한별 리다이렉트
 - InMemoryUserDetailsManager + /join으로 런타임 사용자 추가
 - BCrypt 비밀번호 인코딩
-- Thymeleaf + #authentication, #authorization 유틸로 인증 정보 표시
