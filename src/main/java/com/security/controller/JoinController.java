@@ -6,7 +6,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.Valid;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,9 +18,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequiredArgsConstructor
 public class JoinController {
 
-    //private final InMemoryUserDetailsManager userDetailsManager;
-    private final org.springframework.security.provisioning.UserDetailsManager userDetailsManager;
+
     private final PasswordEncoder passwordEncoder;
+
+    private final org.springframework.security.provisioning.UserDetailsManager userDetailsManager;
 
     @GetMapping("/join")
     public String joinForm(Model model) {
