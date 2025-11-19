@@ -1,7 +1,6 @@
 package com.security.jwt;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
@@ -38,12 +37,36 @@ public class JwtTokenProvider {
         Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(now)
-                .setExpiration(expiry)
+                .setSubject(username)        // 토큰 주체 (유저명)
+                .setIssuedAt(now)            // 발급 시간
+                .setExpiration(expiry)       // 만료 시간
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+                .compact();                  // 최종 문자열 JWT 생성
     }
 
+    // 토큰에서 username 추출
+    public String getUsername(String token) {
+        return parseClaims(token).getBody().getSubject();
+    }
+
+    // 토큰 검증
+    public boolean validateToken(String token) {
+        try {
+            parseClaims(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            System.out.println("JWT 만료");
+        } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("JWT 오류");
+        }
+        return false;
+    }
+
+    private Jws<Claims> parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+    }
 
 }
