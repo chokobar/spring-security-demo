@@ -62,6 +62,7 @@ public class JwtTokenProvider {
         return false;
     }
 
+    // JWT의 유효성 검사 + payload 추출
     private Jws<Claims> parseClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
