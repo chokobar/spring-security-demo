@@ -1,5 +1,8 @@
 package com.security.config;
 
+import com.security.jwt.JwtAuthenticationFilter;
+import com.security.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,29 +20,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity  //HTTP 요청(URL) 단위 보안
-@EnableMethodSecurity   // 메서드 실행 단위 보안
+@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    // BCrypt 인코더
     @Bean
     PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // strength 기본=10
+        return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    AuthenticationSuccessHandler roleBasedSuccessHandler() {
-        return (request, response, authentication) -> {
-            boolean isAdmin = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
-            response.sendRedirect(isAdmin ? "/admin" : "/home");
-        };
-    }
-
-    // 관리자 및 사용자 (BCrypt 적용)
     @Bean
     InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
         UserDetails admin = User.withUsername("admin")
@@ -54,14 +46,26 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(admin, user);
     }
 
-    // 보안 설정
+    // 필터를 직접 생성
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService
+    ) {
+        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) throws Exception {
+
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/home", "/auth/login", "/join", "/css/**",
                                 "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/login").permitAll()
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -74,7 +78,7 @@ public class SecurityConfig {
                 .rememberMe(rm -> rm
                         .key("demo-remember-me-key")
                         .rememberMeParameter("remember-me")
-                        .tokenValiditySeconds(1209600)      // 14일
+                        .tokenValiditySeconds(1209600)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -83,9 +87,22 @@ public class SecurityConfig {
                         .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll()
                 )
-                .csrf(Customizer.withDefaults());
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+
+        http.addFilterBefore(jwtAuthenticationFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    AuthenticationSuccessHandler roleBasedSuccessHandler() {
+        return (request, response, authentication) -> {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(auth -> auth.equals("ROLE_ADMIN"));
+            response.sendRedirect(isAdmin ? "/admin" : "/home");
+        };
     }
 
     @Bean
@@ -93,3 +110,4 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 }
+
