@@ -26,7 +26,7 @@ public class JwtAuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            // 1) 스프링 시큐리티로 아이디/비번 인증 시도
+            // 스프링 시큐리티로 아이디/비번 인증 시도
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
@@ -34,10 +34,10 @@ public class JwtAuthController {
                     )
             );
 
-            // 2) 인증 성공하면 JWT 생성
+            // 인증 성공하면 JWT 생성
             String token = jwtTokenProvider.createToken(authentication.getName());
 
-            // 3) 토큰 반환
+            // 토큰 반환
             return ResponseEntity.ok(new LoginResponse(token));
 
         } catch (AuthenticationException e) {
