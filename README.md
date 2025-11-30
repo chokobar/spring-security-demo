@@ -36,3 +36,4 @@ ROLE_ADMIN → /admin, 그 외 → /home
 - AuthenticationSuccessHandler로 권한별 리다이렉트
 - InMemoryUserDetailsManager + /join으로 런타임 사용자 추가
 - BCrypt 비밀번호 인코딩
+- 테스트 코드 작성
