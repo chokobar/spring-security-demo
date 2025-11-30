@@ -35,7 +35,7 @@ public class JwtAuthController {
             );
 
             // 인증 성공하면 JWT 생성
-            String token = jwtTokenProvider.createToken(authentication.getName());
+            String token = jwtTokenProvider.createToken(authentication);
 
             // 토큰 반환
             return ResponseEntity.ok(new LoginResponse(token));
