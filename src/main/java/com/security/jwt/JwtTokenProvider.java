@@ -5,6 +5,8 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -32,16 +34,30 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public String createToken(String username) {
+    public String createToken(Authentication authentication) {
+        String username = authentication.getName();
+
+        // ROLE 목록 추출 (예: ["ROLE_USER", "ROLE_ADMIN"])
+        var roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
-                .setSubject(username)        // 토큰 주체 (유저명)
-                .setIssuedAt(now)            // 발급 시간
-                .setExpiration(expiry)       // 만료 시간
+                .setSubject(username)          // sub: "user01"
+                .claim("roles", roles)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();                  // 최종 문자열 JWT 생성
+                .compact();
+    }
+
+    // (선택) 토큰에서 roles 꺼내는 헬퍼
+    public java.util.List<String> getRoles(String token) {
+        Claims claims = parseClaims(token).getBody();
+        return claims.get("roles", java.util.List.class);
     }
 
     // 토큰에서 username 추출
