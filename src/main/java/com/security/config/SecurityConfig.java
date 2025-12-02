@@ -5,8 +5,8 @@ import com.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,10 +21,12 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     @Bean
@@ -46,26 +48,48 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(admin, user);
     }
 
-    // 필터를 직접 생성
+    // JWT 필터 Bean
     @Bean
-    JwtAuthenticationFilter jwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsService userDetailsService
+    JwtAuthenticationFilter jwtAuthenticationFilter(
+            JwtTokenProvider jwtTokenProvider,
+            UserDetailsService userDetailsService
     ) {
         return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(
+    @Order(1)   // Spring Security API 먼저 검사
+    SecurityFilterChain apiSecurityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter
     ) throws Exception {
 
         http
+                .securityMatcher("/api/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/auth/login", "/join", "/css/**",
-                                "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/api/login").permitAll()
-                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(sm -> sm
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .csrf(csrf -> csrf.disable());
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2) // @Order(1) 이후 웹 요청 처리
+    SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
+
+        http
+                .securityMatcher(request -> !request.getRequestURI().startsWith("/api/"))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/home", "/auth/login", "/join",
+                                "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -86,14 +110,11 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll()
-                )
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
-
-        http.addFilterBefore(jwtAuthenticationFilter,
-                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+                );
 
         return http.build();
     }
+
 
     @Bean
     AuthenticationSuccessHandler roleBasedSuccessHandler() {
@@ -106,8 +127,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration
+    ) throws Exception {
         return configuration.getAuthenticationManager();
     }
 }
-
