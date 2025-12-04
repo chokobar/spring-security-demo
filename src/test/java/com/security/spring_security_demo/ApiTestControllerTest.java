@@ -46,7 +46,7 @@ class ApiTestControllerTest {
         String token = map.get("token");
 
         // 발급받은 토큰으로 /api/me 요청
-        mockMvc.perform(get("/api/me")
+        mockMvc.perform(get("/api/self")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user01"))
