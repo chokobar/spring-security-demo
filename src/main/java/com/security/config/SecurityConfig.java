@@ -115,7 +115,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-
     @Bean
     AuthenticationSuccessHandler roleBasedSuccessHandler() {
         return (request, response, authentication) -> {
