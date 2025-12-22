@@ -1,4 +1,4 @@
-# 🔐 Spring Boot Security 학습 프로젝트
+# 🔐 Spring Boot Security 프로젝트
 
 ## 📖 개요
 Spring Boot 3 기반의 Spring Security 기본기 학습용 프로젝트입니다.
