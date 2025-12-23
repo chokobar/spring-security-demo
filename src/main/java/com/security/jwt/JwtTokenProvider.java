@@ -54,7 +54,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // (선택) 토큰에서 roles 꺼내는 헬퍼
+    // 토큰에서 roles 꺼내는 헬퍼
     public java.util.List<String> getRoles(String token) {
         Claims claims = parseClaims(token).getBody();
         return claims.get("roles", java.util.List.class);
